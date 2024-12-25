@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Thread Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Thread Viewer</h1>
+
+    <!-- Root Post (Always Full Brightness) -->
+    <div id="post-{{ rows[0][0] }}" class="post depth-0 brightness-10">
+        <strong>{{ rows[0][2] }}</strong> - {{ rows[0][3] }}<br />
+        {{ rows[0][4] | safe }}
+    </div>
+
+    <!-- Replies -->
+    {% for row in rows[1:] %}
+        <!-- Condensed View with Recency Shading -->
+        <div id="post-{{ row[0] }}" 
+             class="reply depth-{{ row[5] }} brightness-{{ row[6] }}" 
+             onclick="toggleReply({{ row[0] }}, {{ row[5] }})">
+            {{ row[4][:100] }}{% if row[4]|length > 100 %}...{% endif %}
+            <strong class="author">{{ row[2] }}</strong>
+        </div>
+
+        <!-- Full View (Always Brightest, Initially Hidden) -->
+        <div id="full-post-{{ row[0] }}" 
+             class="reply depth-{{ row[5] }} brightness-10" 
+             style="display: none;">
+            <strong>{{ row[2] }}</strong> - {{ row[3] }}<br />
+            {{ row[4] | safe }}
+        </div>
+    {% endfor %}
+
+    <script>
+        let expandedReplyId = null;
+
+        function toggleReply(postId) {
+            if (expandedReplyId !== null && expandedReplyId !== postId) {
+                const prevCondensed = document.getElementById('post-' + expandedReplyId);
+                const prevFull = document.getElementById('full-post-' + expandedReplyId);
+                prevCondensed.style.display = 'block';
+                prevFull.style.display = 'none';
+                prevFull.classList.remove('expanded');
+            }
+
+            const condensed = document.getElementById('post-' + postId);
+            const full = document.getElementById('full-post-' + postId);
+
+            if (condensed.style.display !== 'none') {
+                condensed.style.display = 'none';
+                full.style.display = 'block';
+                full.classList.add('expanded');
+                expandedReplyId = postId;
+
+                // Update URL fragment
+                window.location.hash = 'post-' + postId;
+            } else {
+                full.style.display = 'none';
+                condensed.style.display = 'block';
+                full.classList.remove('expanded');
+                expandedReplyId = null;
+            }
+        }
+
+        // Auto-expand post if URL hash is present
+        window.onload = function () {
+            const hash = window.location.hash.substring(1); // Remove #
+            if (hash.startsWith('post-')) {
+                const postId = hash.split('-')[1];
+                toggleReply(postId); // Auto-expand
+            }
+        };
+    </script>
+</body>
+</html>

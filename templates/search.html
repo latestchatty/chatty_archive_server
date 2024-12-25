@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Posts by {{ username }}</h1>
+
+    <!-- Results -->
+    <ul>
+        {% for row in results %}
+            <li>
+                <span class="date">{{ row[2] }}</span> - 
+                <a href="/thread/{{ row[1] }}#post-{{ row[0] }}" class="preview-link">
+                    {{ row[3] }}
+                </a>
+            </li>
+        {% else %}
+            <li>No posts found for {{ username }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Pagination Controls -->
+    {% set total_pages = (total_count // page_size) + (1 if total_count % page_size > 0 else 0) %}
+    {% set halfway = (page + total_pages) // 2 %}
+
+    <div class="pagination-container">
+        <!-- Page Info -->
+        <div class="pagination-info">
+            Page {{ page }} of {{ total_pages }}
+        </div>
+
+        <!-- Pagination Buttons -->
+        <div class="pagination">
+            <!-- Previous Page -->
+            {% if page > 1 %}
+                <a href="?by_user={{ username }}&page={{ page - 1 }}&page_size={{ page_size }}">Previous: {{ page - 1 }}</a>
+            {% endif %}
+
+            <!-- Next Page -->
+            {% if page < total_pages %}
+                <a href="?by_user={{ username }}&page={{ page + 1 }}&page_size={{ page_size }}">Next: {{ page + 1 }}</a>
+            {% endif %}
+
+            <!-- Binary Search Links -->
+            {% if page < total_pages %}
+                <a href="?by_user={{ username }}&page={{ halfway }}&page_size={{ page_size }}">Halfway: {{ halfway }}</a>
+                <a href="?by_user={{ username }}&page={{ total_pages }}&page_size={{ page_size }}">Last Page: {{ total_pages }}</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back to Home -->
+    <a href="/" class="back-link">Back to Home</a>
+</body>
+</html>

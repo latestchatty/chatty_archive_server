@@ -1,0 +1,145 @@
+/* General Styles */
+body { 
+    font-family: Arial, sans-serif; 
+    margin: 20px; 
+    background-color: black; 
+    color: #ccc; 
+}
+
+/* Headings */
+h1 {
+    color: white;
+}
+
+/* Lists */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+/* Hyperlinks - Default Style */
+a {
+    color: #bbb; /* Slightly brighter gray */
+    text-decoration: none; /* No underline by default */
+}
+
+a:hover {
+    color: #ddd; /* Lighter gray on hover */
+    text-decoration: underline; /* Underline on hover */
+}
+
+/* Preview Links - Pale Yellow */
+.preview-link {
+    color: #ffff99; /* Pale Yellow */
+}
+
+.preview-link:hover {
+    text-decoration: underline;
+}
+
+/* Pagination Controls */
+.pagination {
+    margin-top: 20px;
+}
+
+.pagination a {
+    color: #ffff99; /* Pale Yellow for pagination buttons */
+    text-decoration: none;
+    padding: 5px 10px;
+    border: 1px solid #444;
+    margin: 0 5px;
+}
+
+.pagination a:hover {
+    background-color: #222;
+}
+
+/* Date Formatting */
+.date {
+    color: #888; /* Gray date formatting */
+    text-decoration: none;
+}
+
+/* Post Styles */
+.post { 
+    padding: 10px; 
+    border: 1px solid #444; 
+    margin-bottom: 5px; 
+}
+
+.depth-0 { margin-left: 0; }
+
+/* Replies */
+.reply { 
+    cursor: pointer; 
+    padding: 5px; 
+}
+
+/* Username Formatting */
+.author { 
+    font-weight: bold; 
+    margin-left: 5px; 
+    color: #ffff99; /* Pale Yellow */
+}
+
+/* Indentation for Thread Levels */
+.depth-1 { margin-left: 20px; }
+.depth-2 { margin-left: 40px; }
+.depth-3 { margin-left: 60px; }
+.depth-4 { margin-left: 80px; }
+
+/* Brightness Stops */
+.brightness-1 { color: #888; }   /* Darker Gray */
+.brightness-2 { color: #999; }
+.brightness-3 { color: #aaa; }
+.brightness-4 { color: #b3b3b3; }
+.brightness-5 { color: #bbb; }
+.brightness-6 { color: #c4c4c4; }
+.brightness-7 { color: #ccc; }
+.brightness-8 { color: #ddd; }
+.brightness-9 { color: #eee; }
+.brightness-10 { color: #fff; }  /* Brightest White */
+
+/* Expanded Post Highlight */
+.expanded {
+    background-color: #222; 
+    border: 1px solid white; /* White border for expanded posts */
+    padding: 10px;
+}
+
+/* Pagination Container */
+.pagination-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Page Info */
+.pagination-info {
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #ccc;
+}
+
+/* Pagination Buttons */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Spacing between buttons */
+    flex-wrap: wrap; /* Wraps to new line on smaller screens */
+}
+
+/* Pagination Links */
+.pagination a {
+    padding: 8px 12px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #ffff99; /* Pale yellow */
+    background-color: #333;
+    font-weight: bold;
+}
+
+.pagination a:hover {
+    background-color: #444;
+    color: #ffcc66; /* Brighter yellow on hover */
+}

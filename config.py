@@ -1,0 +1,5 @@
+DB_NAME = "chatty"
+DB_USER = "postgres"
+DB_PASSWORD = "HyM92rOTGitIYzAC"
+DB_HOST = "localhost"
+DB_PORT = "5432"

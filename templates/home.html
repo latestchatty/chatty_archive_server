@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatty Archive Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Chatty Archive Search</h1>
+    <div class="container">
+        <form id="searchForm" method="get" action="/search">
+            <!-- Search by Username -->
+            <div class="form-group">
+                <label for="username">Search by Username:</label>
+                <input type="text" id="username" name="by_user" placeholder="Enter username...">
+            </div>
+
+            <!-- Page Size (Optional) -->
+            <div class="form-group">
+                <label for="pageSize">Results Per Page:</label>
+                <input type="number" id="pageSize" name="page_size" placeholder="Default: 100">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn">Search</button>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Powered by the Chatty Archive Viewer. Built for nostalgia. 🌟
+    </div>
+</body>
+</html>
