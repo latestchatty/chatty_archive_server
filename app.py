@@ -65,36 +65,57 @@ def sanitize_html(html, remove_br=False, remove_links=False):
     return cleaned_html
 
 def fetch_thread(post_id):
-    query = """
+    # Recursive query for thread hierarchy
+    thread_query = """
         WITH RECURSIVE thread AS (
             SELECT 
                 p.id, p.parent_id, p.thread_id, p.author, p.date, p.body, 0 AS depth,
-                ARRAY[p.id]::integer[] AS path,
-                COALESCE(l.count, 0) AS lol_count -- Join for LOL count
+                ARRAY[p.id]::integer[] AS path
             FROM post p
-            LEFT JOIN post_lols l ON p.id = l.post_id AND l.tag = 'lol' -- Filter for 'lol' tags
             WHERE p.id = %s
 
             UNION ALL
 
             SELECT 
                 p.id, p.parent_id, p.thread_id, p.author, p.date, p.body, t.depth + 1,
-                t.path || p.id,
-                COALESCE(l.count, 0) AS lol_count -- Include LOL count for children
+                t.path || p.id
             FROM post p
             JOIN thread t ON p.parent_id = t.id
-            LEFT JOIN post_lols l ON p.id = l.post_id AND l.tag = 'lol'
             WHERE p.thread_id = t.thread_id
         )
-        SELECT id, parent_id, author, date, body, depth, lol_count
+        SELECT id, parent_id, author, date, body, depth, path
         FROM thread
-        ORDER BY path; -- Depth-first ordering
+        ORDER BY path;
     """
+
+    # Query for LOL tags
+    tags_query = """
+        SELECT post_id, tag, count
+        FROM post_lols
+        WHERE post_id = ANY(%s);
+    """
+
+    # Execute thread query
     conn = get_db_connection()
     with conn.cursor() as cur:
-        cur.execute(query, (post_id,))
+        # Fetch thread hierarchy
+        cur.execute(thread_query, (post_id,))
         rows = cur.fetchall()
+
+        # Extract post IDs from results
+        post_ids = [row[0] for row in rows]
+
+        # Fetch tags for these posts
+        cur.execute(tags_query, (post_ids,))
+        tags = cur.fetchall()
     conn.close()
+
+    # Organize tags into a dictionary by post ID
+    tag_map = {}
+    for post_id, tag, count in tags:
+        if post_id not in tag_map:
+            tag_map[post_id] = {}
+        tag_map[post_id][tag] = count
 
     # Calculate brightness based on date
     dates = [row[3] for row in rows]
@@ -103,10 +124,11 @@ def fetch_thread(post_id):
 
     def calculate_brightness(date):
         if oldest_date == newest_date:
-            return 10  # Single post, always brightest
+            return 10
         ratio = (date - oldest_date) / (newest_date - oldest_date)
         return 1 + int(ratio * 9)
 
+    # Format rows for output
     sanitized_rows = []
     for i, row in enumerate(rows):
         sanitized_rows.append((
@@ -114,10 +136,10 @@ def fetch_thread(post_id):
             row[1],  # Parent ID
             row[2],  # Author
             row[3],  # Date
-            sanitize_html(row[4], remove_br=(i > 0)),  # Strip <br> for previews
+            sanitize_html(row[4], remove_br=(i > 0)),  # Condensed previews strip <br>
             row[5],  # Depth
-            calculate_brightness(row[3]),  # Brightness level
-            row[6]  # LOL count
+            calculate_brightness(row[3]),  # Brightness
+            tag_map.get(row[0], {})  # Tags as a dictionary (default to empty)
         ))
     return sanitized_rows
 

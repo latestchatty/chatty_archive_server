@@ -10,9 +10,27 @@
     <h1>Thread Viewer</h1>
 
     <!-- Root Post -->
-    <div id="post-{{ rows[0][0] }}" class="post depth-0 brightness-10">
-        <strong>{{ rows[0][2] }}</strong> - {{ rows[0][3] }}<br />
-        {{ rows[0][4] | safe }}
+    <div id="post-{{ rows[0][0] }}" class="post depth-0 brightness-10 expanded">
+        <!-- Header with Username and Tags -->
+        <div class="post-header">
+            <strong class="author">{{ rows[0][2] }}</strong>
+            {% set tag_order = ['lol', 'inf', 'unf', 'tag', 'wtf', 'wow', 'aww'] %}
+            {% for tag in tag_order %}
+                {% if tag in rows[0][7] and rows[0][7][tag] > 0 %}
+                    <span class="tag-{{ tag }}">[{{ tag }} x{{ rows[0][7][tag] }}]</span>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Post Body -->
+        <div class="post-body">
+            {{ rows[0][4] | safe }}
+        </div>
+
+        <!-- Footer Row -->
+        <div class="post-footer-row">
+            <div class="post-footer-date">{{ rows[0][3] }}</div>
+        </div>
     </div>
 
     <!-- Replies -->
@@ -23,18 +41,36 @@
              onclick="toggleReply({{ row[0] }}, {{ row[5] }})">
             {{ row[4][:100] }}{% if row[4]|length > 100 %}...{% endif %}
             <strong class="author">{{ row[2] }}</strong>
-            <!-- LOL Badge -->
-            {% if row[7] > 0 %}
-                <span class="lol-tag">[lol x {{ row[7] }}]</span>
-            {% endif %}
+            {% for tag in tag_order %}
+                {% if tag in row[7] and row[7][tag] > 0 %}
+                    <span class="tag-{{ tag }}">[{{ tag }} x{{ row[7][tag] }}]</span>
+                {% endif %}
+            {% endfor %}
         </div>
 
-        <!-- Full View (Always Brightest) -->
+        <!-- Expanded View -->
         <div id="full-post-{{ row[0] }}" 
-             class="reply depth-{{ row[5] }} brightness-10" 
+             class="reply depth-{{ row[5] }} brightness-10 expanded" 
              style="display: none;">
-            <strong>{{ row[2] }}</strong> - {{ row[3] }}<br />
-            {{ row[4] | safe }}
+            <!-- Header -->
+            <div class="post-header">
+                <strong class="author">{{ row[2] }}</strong>
+                {% for tag in tag_order %}
+                    {% if tag in row[7] and row[7][tag] > 0 %}
+                        <span class="tag-{{ tag }}">[{{ tag }} x{{ row[7][tag] }}]</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Body -->
+            <div class="post-body">
+                {{ row[4] | safe }}
+            </div>
+
+            <!-- Footer Row -->
+            <div class="post-footer-row">
+                <div class="post-footer-date">{{ row[3] }}</div>
+            </div>
         </div>
     {% endfor %}
 
@@ -69,12 +105,11 @@
             }
         }
 
-        // Auto-expand post if URL hash is present
         window.onload = function () {
-            const hash = window.location.hash.substring(1); // Remove #
+            const hash = window.location.hash.substring(1);
             if (hash.startsWith('post-')) {
                 const postId = hash.split('-')[1];
-                toggleReply(postId); // Auto-expand
+                toggleReply(postId);
             }
         };
     </script>
