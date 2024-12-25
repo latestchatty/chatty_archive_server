@@ -143,42 +143,64 @@ def fetch_thread(post_id):
         ))
     return sanitized_rows
 
-def fetch_posts_by_username(username, page=1, page_size=PAGE_SIZE):
-    """Fetch paginated posts by username."""
+def fetch_posts_by_username(username, page=1, page_size=100, sort_by=None):
+    """Fetch paginated posts by username with optional tag-based sorting."""
     offset = (page - 1) * page_size
 
-    query = """
-        SELECT id, thread_id, date, body
-        FROM post
-        WHERE author ILIKE %s
-        ORDER BY date DESC
-        LIMIT %s OFFSET %s;
+    # Base query with optional tag filtering
+    query = f"""
+        SELECT p.id, p.thread_id, p.date, p.body, p.author,
+               COALESCE(jsonb_object_agg(l.tag, l.count) FILTER (WHERE l.tag IS NOT NULL), '{{}}') AS tags
+        FROM post p
+        LEFT JOIN post_lols l ON p.id = l.post_id
+        WHERE p.author ILIKE %s
+        GROUP BY p.id, p.thread_id, p.date, p.body, p.author
     """
+
+    # Add sorting based on a tag if specified
+    if sort_by:
+        query += f"""
+            ORDER BY COALESCE(MAX(CASE WHEN l.tag = %s THEN l.count ELSE 0 END), 0) DESC, p.date DESC
+        """
+    else:
+        query += " ORDER BY p.date DESC"
+
+    # Add pagination
+    query += " LIMIT %s OFFSET %s;"
+
+    # Count query for total rows
     count_query = """
         SELECT COUNT(*)
         FROM post
         WHERE author ILIKE %s;
     """
+
     conn = get_db_connection()
     with conn.cursor() as cur:
-        # Fetch paginated results
-        cur.execute(query, (username, page_size, offset))
+        # Fetch results
+        if sort_by:
+            cur.execute(query, (username, sort_by, page_size, offset))
+        else:
+            cur.execute(query, (username, page_size, offset))
         rows = cur.fetchall()
 
-        # Fetch total post count
+        # Fetch total count
         cur.execute(count_query, (username,))
         total_count = cur.fetchone()[0]
 
     conn.close()
 
-    # Sanitize and strip <br> for previews
+    # Organize results with sanitized tags
     sanitized_rows = []
     for row in rows:
+        tags = row[5]  # Tags as JSON
         sanitized_rows.append((
-            row[0],  # id
-            row[1],  # thread_id
-            row[2],  # date
-            sanitize_html(row[3][:100], remove_br=True, remove_links=True) + ('...' if len(row[3]) > 100 else '')  # preview
+            row[0],  # Post ID
+            row[1],  # Thread ID
+            row[2],  # Date
+            sanitize_html(row[3][:100], remove_br=True, remove_links=True) + ('...' if len(row[3]) > 100 else ''),  # Preview
+            row[4],  # Author
+            tags if tags else {}  # Tags dictionary
         ))
 
     return sanitized_rows, total_count
@@ -207,25 +229,30 @@ def home():
 def search():
     # Get query parameters
     username = request.args.get('by_user', '').strip()
-    page = int(request.args.get('page', 1))
+    page = int(request.args.get('page', 1))  # Default to page 1
+    page_size = int(request.args.get('page_size', PAGE_SIZE))  # Use the constant for default
+    sort_by = request.args.get('sort_by', None)
 
     if not username:
-        # Redirect back to home if no username is provided
         return redirect(url_for('home'))
 
-    # Fetch paginated results
-    results, total_count = fetch_posts_by_username(username, page)
+    # Fetch posts and total count
+    results, total_count = fetch_posts_by_username(username, page, page_size, sort_by)
 
+    # Calculate total pages
+    total_pages = (total_count // page_size) + (1 if total_count % page_size > 0 else 0)
+
+    # Render template
     return render_template(
         'search.html',
         username=username,
         results=results,
-        total_count=total_count,
         page=page,
-        page_size=PAGE_SIZE
+        page_size=page_size,
+        total_pages=total_pages,
+        sort_by=sort_by,
+        total_count=total_count
     )
-
-
 # Thread Route
 @app.route('/thread/<int:post_id>')
 def thread(post_id):

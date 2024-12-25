@@ -9,6 +9,24 @@
 <body>
     <h1>Posts by {{ username }}</h1>
 
+    <!-- Sorting Dropdown -->
+    <form method="get" action="/search" class="sort-form">
+        <input type="hidden" name="by_user" value="{{ username }}">
+        <input type="hidden" name="page" value="1">
+        <input type="hidden" name="page_size" value="{{ page_size }}">
+        <label for="sort_by">Sort by tag:</label>
+        <select name="sort_by" id="sort_by" onchange="this.form.submit()">
+            <option value="">None</option>
+            <option value="lol" {% if sort_by == 'lol' %}selected{% endif %}>LOL</option>
+            <option value="inf" {% if sort_by == 'inf' %}selected{% endif %}>INF</option>
+            <option value="unf" {% if sort_by == 'unf' %}selected{% endif %}>UNF</option>
+            <option value="tag" {% if sort_by == 'tag' %}selected{% endif %}>TAG</option>
+            <option value="wtf" {% if sort_by == 'wtf' %}selected{% endif %}>WTF</option>
+            <option value="wow" {% if sort_by == 'wow' %}selected{% endif %}>WOW</option>
+            <option value="aww" {% if sort_by == 'aww' %}selected{% endif %}>AWW</option>
+        </select>
+    </form>
+
     <!-- Results -->
     <ul>
         {% for row in results %}
@@ -17,6 +35,15 @@
                 <a href="/thread/{{ row[1] }}#post-{{ row[0] }}" class="preview-link">
                     {{ row[3] }}
                 </a>
+                <strong class="author">{{ row[4] }}</strong>
+
+                <!-- Tags -->
+                {% set tag_order = ['lol', 'inf', 'unf', 'tag', 'wtf', 'wow', 'aww'] %}
+                {% for tag in tag_order %}
+                    {% if tag in row[5] and row[5][tag] > 0 %}
+                        <span class="tag-{{ tag }}">[{{ tag }} x{{ row[5][tag] }}]</span>
+                    {% endif %}
+                {% endfor %}
             </li>
         {% else %}
             <li>No posts found for {{ username }}</li>
@@ -24,15 +51,12 @@
     </ul>
 
     <!-- Pagination Controls -->
-    {% set total_pages = (total_count // page_size) + (1 if total_count % page_size > 0 else 0) %}
     {% set halfway = (page + total_pages) // 2 %}
-
     <div class="pagination-container">
         <!-- Page Info -->
         <div class="pagination-info">
             Page {{ page }} of {{ total_pages }}
         </div>
-
         <!-- Pagination Buttons -->
         <div class="pagination">
             <!-- Previous Page -->
@@ -53,6 +77,7 @@
         </div>
     </div>
 
+    
     <!-- Back to Home -->
     <a href="/" class="back-link">Back to Home</a>
 </body>

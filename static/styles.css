@@ -188,3 +188,14 @@ a:hover {
     margin-left: 5px;
     font-weight: bold;
 }
+
+/* Sorting Dropdown */
+.sort-form {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.sort-form label {
+    margin-right: 10px;
+    color: #ccc;
+}
