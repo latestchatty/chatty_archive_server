@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thread Viewer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Thread Viewer</h1>
 
-    <!-- Root Post (Always Full Brightness) -->
+    <!-- Root Post -->
     <div id="post-{{ rows[0][0] }}" class="post depth-0 brightness-10">
         <strong>{{ rows[0][2] }}</strong> - {{ rows[0][3] }}<br />
         {{ rows[0][4] | safe }}
@@ -16,15 +17,19 @@
 
     <!-- Replies -->
     {% for row in rows[1:] %}
-        <!-- Condensed View with Recency Shading -->
+        <!-- Condensed View -->
         <div id="post-{{ row[0] }}" 
              class="reply depth-{{ row[5] }} brightness-{{ row[6] }}" 
              onclick="toggleReply({{ row[0] }}, {{ row[5] }})">
             {{ row[4][:100] }}{% if row[4]|length > 100 %}...{% endif %}
             <strong class="author">{{ row[2] }}</strong>
+            <!-- LOL Badge -->
+            {% if row[7] > 0 %}
+                <span class="lol-tag">[lol x {{ row[7] }}]</span>
+            {% endif %}
         </div>
 
-        <!-- Full View (Always Brightest, Initially Hidden) -->
+        <!-- Full View (Always Brightest) -->
         <div id="full-post-{{ row[0] }}" 
              class="reply depth-{{ row[5] }} brightness-10" 
              style="display: none;">

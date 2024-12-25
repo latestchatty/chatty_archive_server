@@ -68,21 +68,25 @@ def fetch_thread(post_id):
     query = """
         WITH RECURSIVE thread AS (
             SELECT 
-                id, parent_id, thread_id, author, date, body, 0 AS depth,
-                ARRAY[id]::integer[] AS path
-            FROM post
-            WHERE id = %s
+                p.id, p.parent_id, p.thread_id, p.author, p.date, p.body, 0 AS depth,
+                ARRAY[p.id]::integer[] AS path,
+                COALESCE(l.count, 0) AS lol_count -- Join for LOL count
+            FROM post p
+            LEFT JOIN post_lols l ON p.id = l.post_id AND l.tag = 'lol' -- Filter for 'lol' tags
+            WHERE p.id = %s
 
             UNION ALL
 
             SELECT 
                 p.id, p.parent_id, p.thread_id, p.author, p.date, p.body, t.depth + 1,
-                t.path || p.id
+                t.path || p.id,
+                COALESCE(l.count, 0) AS lol_count -- Include LOL count for children
             FROM post p
             JOIN thread t ON p.parent_id = t.id
+            LEFT JOIN post_lols l ON p.id = l.post_id AND l.tag = 'lol'
             WHERE p.thread_id = t.thread_id
         )
-        SELECT id, parent_id, author, date, body, depth
+        SELECT id, parent_id, author, date, body, depth, lol_count
         FROM thread
         ORDER BY path; -- Depth-first ordering
     """
@@ -92,36 +96,29 @@ def fetch_thread(post_id):
         rows = cur.fetchall()
     conn.close()
 
-    # Calculate date range
-    if not rows:
-        return []
-
-    # Find the oldest and newest dates
+    # Calculate brightness based on date
     dates = [row[3] for row in rows]
     oldest_date = min(dates)
     newest_date = max(dates)
 
-    # Function to calculate brightness based on date
     def calculate_brightness(date):
         if oldest_date == newest_date:
             return 10  # Single post, always brightest
-        # Scale brightness from 1 (oldest) to 10 (newest)
         ratio = (date - oldest_date) / (newest_date - oldest_date)
         return 1 + int(ratio * 9)
 
-    # Sanitize and add brightness levels
     sanitized_rows = []
-    for row in rows:
+    for i, row in enumerate(rows):
         sanitized_rows.append((
             row[0],  # Post ID
             row[1],  # Parent ID
             row[2],  # Author
             row[3],  # Date
-            sanitize_html(row[4], remove_br=True),  # Strip <br> for condensed views
+            sanitize_html(row[4], remove_br=(i > 0)),  # Strip <br> for previews
             row[5],  # Depth
-            calculate_brightness(row[3])  # Brightness level
+            calculate_brightness(row[3]),  # Brightness level
+            row[6]  # LOL count
         ))
-
     return sanitized_rows
 
 def fetch_posts_by_username(username, page=1, page_size=PAGE_SIZE):

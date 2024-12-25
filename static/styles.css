@@ -143,3 +143,14 @@ a:hover {
     background-color: #444;
     color: #ffcc66; /* Brighter yellow on hover */
 }
+
+/* Tag styles */
+.lol-tag {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 6px;
+    color: #ff9933; /* Orange */
+    font-weight: bold;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
